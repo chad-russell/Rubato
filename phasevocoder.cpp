@@ -148,7 +148,7 @@ int read_mp3_file_pv(void* arg)
     m->audio_frames = (double*)malloc(vectorBuffer.size()*sizeof(double));
     m->audio_frames_out = (float*)malloc(vectorBuffer.size()*sizeof(float)*2);
     m->audio_frames_reading_from = m->audio_frames;
-    for(int i = 0; i < vectorBuffer.size(); i += 2) {
+    for(int i = 0; i < vectorBuffer.size() / 2; ++i) {
         m->audio_frames[i] = (vectorBuffer.at(i*2) + vectorBuffer.at(i*2 + 1)) / 2;
     }
 

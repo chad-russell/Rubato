@@ -83,7 +83,7 @@ int read_mp3_file(void* arg)
 
     qDebug() << "read mp3 file, had num_frames = " << vectorBuffer.size();
     m->m_audio_frames = (double*)malloc(vectorBuffer.size()*sizeof(double));
-    for(int i = 0; i < vectorBuffer.size(); i += 2) {
+    for(int i = 0; i < vectorBuffer.size() / 2; ++i) {
         m->m_audio_frames[i] = ((double)vectorBuffer.at(i*2) + (double)vectorBuffer.at(i*2 + 1)) / 2;
     }
 
