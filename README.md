@@ -5,6 +5,6 @@ Rubato is a music application that aims to help musicians learn more about their
 
 ======
 
-![alt text](https://github.com/chad-russell/Rubato/blob/master/Rubato.png)
+![alt text](https://raw.github.com/chad-russell/Rubato/master/Rubato.png)
 
 The main window shows a plot with time on the horizontal axis and frequency on the vertical axis.  It is possible to click anywhere in the main window and place midi notes, which will be output through a JACK audio port.  This makes it very easy to transcribe your favorite songs, record them into your favorite music program (Rosegarden, Ardour, etc.) and create sheet music.
