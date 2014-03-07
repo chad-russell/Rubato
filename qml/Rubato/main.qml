@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtQuick.Controls 1.1
 
 Rectangle {
-    width: 360*2;
+    width: pitchSlider.x + pitchSlider.width + 20;
     height: 360
     id: window
 
@@ -13,8 +13,8 @@ Rectangle {
         onFreqDataChanged: {
             freqImage.source = ""
             freqImage.source = "image://frequency/fuck"
-//            blur.source = null
-//            blur.source = freqImage
+            blur.source = null
+            blur.source = freqImage
         }
     }
 
@@ -41,22 +41,22 @@ Rectangle {
 
             Image {
                 id: freqImage
-                width: parent.width - playhead.width; height: parent.height - playhead.height
+                width: parent.width - playhead.width
+                height: parent.height - playhead.height
                 x: playhead.width/2
                 y: playhead.height
                 source: model.percentLoaded < 99 ? "" : "image://frequency/fuck"
-//                source: "/home/chad/Desktop/fuckfucfuck.png"
                 fillMode: Image.Stretch
 
             }
-//            GaussianBlur {
-//                id: blur
-//                anchors.fill: freqImage
-//                source: freqImage
-//                radius: 3
-//                samples: 12
-//                deviation: 6
-//            }
+            GaussianBlur {
+                id: blur
+                anchors.fill: freqImage
+                source: freqImage
+                radius: 3
+                samples: 12
+                deviation: 6
+            }
             Rectangle {
                 id: playhead
                 width: 20; height: 20
@@ -66,11 +66,16 @@ Rectangle {
                 onXChanged: {
                     if(dragArea.pressed)
                         model.seekTo(x / freqImage.width)
-//                    for(var i = 0; i < notes.length; i++) {
-//                        if (x > notes[i].x && x < notes[i].x + notes[i].width) {
-//                            console.log("playing", notes[i].midiNumber)
-//                        }
-//                    }
+                    for(var i = 0; i < notes.length; i++) {
+                        if (x > notes[i].x && x < notes[i].x + notes[i].width && !notes[i].playing) {
+                            model.noteOn(notes[i].midiNumber)
+                            notes[i].playing = true
+                        }
+                        else if ((x < notes[i].x || x > notes[i].x + notes[i].width) && notes[i].playing) {
+                            model.noteOff(notes[i].midiNumber)
+                            notes[i].playing = false
+                        }
+                    }
                 }
                 MouseArea {
                     id: dragArea

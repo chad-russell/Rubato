@@ -8,6 +8,7 @@ Rectangle {
     property int midiNumber
     property int initialMidiNumber
     property bool selected: false
+    property bool playing: false
 
     Component.onCompleted: {
         midiNumber = y * 88 / parent.height

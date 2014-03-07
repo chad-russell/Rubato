@@ -10,6 +10,7 @@ int process(jack_nframes_t nframes, void* arg);
 
 jack_client_t* client;
 jack_port_t* jack_output_port;
+jack_port_t* jack_output_midi_port;
 int global_frame;
 
 
@@ -27,6 +28,7 @@ Model::Model(QObject *parent) : QObject(parent)
     /* Set up JACK */
     client = jack_client_open("Rubato", (jack_options_t)0, NULL);
     jack_output_port = jack_port_register(client, "out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+    jack_output_midi_port = jack_port_register(client, "midi_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
     jack_set_process_callback(client, process, this);
     jack_activate(client);
     const char **ports;
@@ -72,7 +74,7 @@ int read_mp3_file(void* arg)
     do
     {
         err = mpg123_read( mh, (unsigned char*)buffer, buffer_size, &done );
-        for(int i = 0; i < buffer_size / sizeof(float); i++) {
+        for(uint i = 0; i < buffer_size / sizeof(float); i++) {
             vectorBuffer.append(buffer[i]);
         }
     } while (err == MPG123_OK);
@@ -89,12 +91,6 @@ int read_mp3_file(void* arg)
 
     num_frames_read = vectorBuffer.size() / 2;
     return num_frames_read;
-}
-
-void Model::readBuffer()
-{
-    QAudioBuffer b = decoder->read();
-    qDebug() << "read " << b.byteCount() << " bytes of audio";
 }
 
 void read_file(void* arg)
@@ -230,6 +226,8 @@ void do_routine(PhaseVocoder* v)
     }
 }
 
+int note_on = -1;
+int note_off = -1;
 int process(jack_nframes_t nframes, void* arg)
 {
     jack_default_audio_sample_t* out = (jack_default_audio_sample_t*)jack_port_get_buffer(jack_output_port, nframes);
@@ -261,6 +259,33 @@ int process(jack_nframes_t nframes, void* arg)
         for(uint i = 0; i < nframes; i++) {
             out[i] = 0;
         }
+    }
+
+    if (note_on == -1 && note_off == -1) {
+        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
+        jack_midi_clear_buffer(output_buf);
+    }
+    if (note_on != -1) {
+        qDebug() << "note on!";
+        note_on = -1;
+        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
+        jack_midi_clear_buffer(output_buf);
+        jack_midi_data_t data[3];
+        data[0] = 0x80;
+        data[1] = 0x4d;
+        data[2] = 0x40;
+        jack_midi_event_write(output_buf, 10, data, 3);
+    }
+    if (note_off != -1) {
+        qDebug() << "note off!";
+        note_off = -1;
+        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
+        jack_midi_clear_buffer(output_buf);
+        jack_midi_data_t data[3];
+        data[0] = 0x80;
+        data[1] = 0x4d;
+        data[2] = 0x40;
+        jack_midi_event_write(output_buf, 10, data, 3);
     }
 
     if (m->playing && m->percentDone() > 0.999) {
@@ -311,11 +336,13 @@ void Model::setTimestretchRatio(double tr)
 void Model::noteOn(int midi_note_number)
 {
     qDebug() << "note on: " << midi_note_number;
+    note_on = midi_note_number;
 }
 
 void Model::noteOff(int midi_note_number)
 {
     qDebug() << "note off: " << midi_note_number;
+    note_off = midi_note_number;
 }
 
 Model::~Model()

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <thread>
 #include <jack/jack.h>
+#include <jack/midiport.h>
 #include <samplerate.h>
 #include <qmath.h>
 #include <QDebug>
@@ -80,7 +81,6 @@ signals:
     void percentLoadedChanged();
 
 public slots:
-    void readBuffer();
 
 };
 
