@@ -56,7 +56,7 @@ PhaseVocoder::PhaseVocoder()
     /* set initial variables */
     fft_size = 4096;
     timestretch_ratio = 1.0;
-    overlap_factor = 128;
+    overlap_factor = 64;
     hop_size = fft_size/overlap_factor;
     an_idx = 1;
     syn_idx = 1;
@@ -224,10 +224,16 @@ double PhaseVocoder::get_timestretch_ratio()
 
 void PhaseVocoder::fft_routine()
 {
+    int fuckme = 0;
     while((float)this->tempo_syn_idx / (float)this->tempo_an_idx <= (float)timestretch_ratio)
     {
         /* re-copy phases_idx into phases_ddx */
         memcpy(syn_phases_ddx, syn_phases_idx, fft_size/2*sizeof(double));
+        ++fuckme;
+        if (fuckme % 4 == 0)
+        {
+            memset(syn_phases_ddx, 0, fft_size/2*sizeof(double));
+        }
 
         /* populate the phase increase array */
         /* phases for idx */
@@ -343,7 +349,7 @@ void PhaseVocoder::write_output(char* output_path)
     }
 
 //    sf_writef_float(out_file, audio_frames_out, num_frames*timestretch_ratio);
-    sf_writef_float(out_file, audio_frames_out, 1000000*timestretch_ratio);
+    sf_writef_float(out_file, audio_frames_out, 1600000*timestretch_ratio);
     sf_close(out_file);
 
     printf("done!\n");

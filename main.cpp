@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     pv->open_audio_file("/Users/chadrussell/Desktop/input.wav");
     pv->set_timestretch_ratio(2);
 
-    for(int i = 0; i < 42000; i++)
+    for(int i = 0; i < 40000; i++)
     {
         pv->fft_routine();
         pv->an_idx += 1;
