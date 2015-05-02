@@ -4,8 +4,8 @@
 #include <string.h>
 #include <math.h>
 #include <complex>
-#include <fftw3.h>
-#include <sndfile.h>
+#include </usr/local/include/fftw3.h>
+#include </usr/local/include/sndfile.h>
 #include "i_indices.h"
 #include "j_indices.h"
 #include "real_vals.h"

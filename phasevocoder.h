@@ -5,8 +5,8 @@
 #include <cmath>
 #include <fstream>
 #include <stdio.h>
-#include <fftw3.h>
-#include <sndfile.h>
+#include </usr/local/include/fftw3.h>
+#include </usr/local/include/sndfile.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

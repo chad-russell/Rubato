@@ -1,7 +1,7 @@
 #include "phasevocoder.h"
-#include <samplerate.h>
+#include </usr/local/include/samplerate.h>
 #include <QDebug>
-#include <mpg123.h>
+#include </usr/local/include/mpg123.h>
 
 /* calculate hamming window for size */
 double *hanning_matlab(int N, short itype)
@@ -56,7 +56,7 @@ PhaseVocoder::PhaseVocoder()
     /* set initial variables */
     fft_size = 4096;
     timestretch_ratio = 1.0;
-    overlap_factor = 16;
+    overlap_factor = 128;
     hop_size = fft_size/overlap_factor;
     an_idx = 1;
     syn_idx = 1;
@@ -235,7 +235,6 @@ void PhaseVocoder::fft_routine()
         for(int j = 0; j < fft_size; j++)
         {
             current_window[j] *= hanning_window[j];
-            //            qDebug() << current_window[j];
         }
 
         fftw_execute(forward);
@@ -313,7 +312,7 @@ void PhaseVocoder::fft_routine()
         fftw_execute(inverse);
         for(int f = 0; f < fft_size; ++f)
         {
-            audio_frames_out[hop_size*this->syn_idx + f] += current_window[f] * hanning_window[f];
+            audio_frames_out[hop_size*this->syn_idx + f] += current_window[f] * hanning_window[f] / 4;
         }
         this->has_written_until = hop_size*this->syn_idx;
 
@@ -331,7 +330,7 @@ void PhaseVocoder::write_output(char* output_path)
     out_info.channels = info.channels;
     out_info.format = info.format;
     out_info.frames = info.frames*timestretch_ratio;
-    out_info.samplerate = info.samplerate;
+    out_info.samplerate = info.samplerate / timestretch_ratio;
     out_info.sections = info.sections;
     out_info.seekable = info.seekable;
     SNDFILE* out_file = sf_open(output_path, SFM_WRITE, &out_info);
@@ -343,7 +342,8 @@ void PhaseVocoder::write_output(char* output_path)
         audio_frames_out[i] /= 1024;
     }
 
-    sf_writef_float(out_file, audio_frames_out, num_frames*timestretch_ratio);
+//    sf_writef_float(out_file, audio_frames_out, num_frames*timestretch_ratio);
+    sf_writef_float(out_file, audio_frames_out, 1000000*timestretch_ratio);
     sf_close(out_file);
 
     printf("done!\n");
@@ -354,10 +354,14 @@ std::vector<double> locate_peaks(double* magnitudes, int size)
 {
     std::vector<double> peaks;
 
-    for(int i = 2; i < size-2; i++)
+    for(int i = 3; i < size-3; i++)
     {
-        if (magnitudes[i] > magnitudes[i-1] && magnitudes[i] > magnitudes[i-2]
-                && magnitudes[i] > magnitudes[i+1] && magnitudes[i] > magnitudes[i+2])
+        if (magnitudes[i] > magnitudes[i-1]
+                && magnitudes[i] > magnitudes[i-2]
+                && magnitudes[i] > magnitudes[i-3]
+                && magnitudes[i] > magnitudes[i+1]
+                && magnitudes[i] > magnitudes[i+2]
+                && magnitudes[i] > magnitudes[i+3])
         {
             peaks.push_back(i);
         }

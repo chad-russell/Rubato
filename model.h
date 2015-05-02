@@ -13,9 +13,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <thread>
-#include <jack/jack.h>
-#include <jack/midiport.h>
-#include <samplerate.h>
+#include </usr/local/include/samplerate.h>
 #include <qmath.h>
 #include <QDebug>
 #include <QUrl>

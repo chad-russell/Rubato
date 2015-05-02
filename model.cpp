@@ -1,16 +1,16 @@
 #include "model.h"
-#include <mpg123.h>
+#include </usr/local/include/mpg123.h>
 #include <QtMultimedia/QAudioFormat>
 #include <QtMultimedia/QAudioDecoder>
 
 // Forward declarations
 QList<qreal> calculate_cqt(double* audio_frames);
 void do_routine(PhaseVocoder* v);
-int process(jack_nframes_t nframes, void* arg);
+//int process(jack_nframes_t nframes, void* arg);
 
-jack_client_t* client;
-jack_port_t* jack_output_port;
-jack_port_t* jack_output_midi_port;
+//jack_client_t* client;
+//jack_port_t* jack_output_port;
+//jack_port_t* jack_output_midi_port;
 int global_frame;
 
 
@@ -26,20 +26,20 @@ Model::Model(QObject *parent) : QObject(parent)
     emit percentLoadedChanged();
 
     /* Set up JACK */
-    client = jack_client_open("Rubato", (jack_options_t)0, NULL);
-    jack_output_port = jack_port_register(client, "out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-    jack_output_midi_port = jack_port_register(client, "midi_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
-    jack_set_process_callback(client, process, this);
-    jack_activate(client);
-    const char **ports;
-    if ((ports = jack_get_ports(client, NULL, NULL, JackPortIsPhysical|JackPortIsInput)) == NULL) {
-        qDebug() << "could not find any physical playback ports!";
-    }
-    for(int i = 0; ports[i] != NULL; ++i) {
-        if (jack_connect(client, jack_port_name(jack_output_port), ports[i])) {
-            qDebug() << "could not connect to playback port(s)!";
-        }
-    }
+//    client = jack_client_open("Rubato", (jack_options_t)0, NULL);
+//    jack_output_port = jack_port_register(client, "out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+//    jack_output_midi_port = jack_port_register(client, "midi_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+//    jack_set_process_callback(client, process, this);
+//    jack_activate(client);
+//    const char **ports;
+//    if ((ports = jack_get_ports(client, NULL, NULL, JackPortIsPhysical|JackPortIsInput)) == NULL) {
+//        qDebug() << "could not find any physical playback ports!";
+//    }
+//    for(int i = 0; ports[i] != NULL; ++i) {
+//        if (jack_connect(client, jack_port_name(jack_output_port), ports[i])) {
+//            qDebug() << "could not connect to playback port(s)!";
+//        }
+//    }
 
     /* Set up libsamplerate */
     srcState = src_new(SRC_SINC_BEST_QUALITY, 1, NULL);
@@ -228,76 +228,76 @@ void do_routine(PhaseVocoder* v)
 
 int note_on = -1;
 int note_off = -1;
-int process(jack_nframes_t nframes, void* arg)
-{
-    jack_default_audio_sample_t* out = (jack_default_audio_sample_t*)jack_port_get_buffer(jack_output_port, nframes);
+//int process(jack_nframes_t nframes, void* arg)
+//{
+//    jack_default_audio_sample_t* out = (jack_default_audio_sample_t*)jack_port_get_buffer(jack_output_port, nframes);
 
-    Model* m = (Model*)arg;
-    PhaseVocoder* v = m->phaseVocoder;
+//    Model* m = (Model*)arg;
+//    PhaseVocoder* v = m->phaseVocoder;
 
-    if (m->playing) {
-        SRC_DATA srcData;
-        srcData.data_in = &(v->audio_frames_out[global_frame]);
-        srcData.data_out = out;
-        srcData.input_frames = nframes * m->m_sample_rate_ratio;
-        srcData.output_frames = nframes;
-        srcData.src_ratio = 1.0 / m->m_sample_rate_ratio;
-        srcData.end_of_input = 0;
+//    if (m->playing) {
+//        SRC_DATA srcData;
+//        srcData.data_in = &(v->audio_frames_out[global_frame]);
+//        srcData.data_out = out;
+//        srcData.input_frames = nframes * m->m_sample_rate_ratio;
+//        srcData.output_frames = nframes;
+//        srcData.src_ratio = 1.0 / m->m_sample_rate_ratio;
+//        srcData.end_of_input = 0;
 
-        src_process(m->srcState, &srcData);
-        for(uint i = 0; i < nframes; i++) {
-            out[i] /= 1000;
-        }
+//        src_process(m->srcState, &srcData);
+//        for(uint i = 0; i < nframes; i++) {
+//            out[i] /= 1000;
+//        }
 
-        for(int i = 0; i < srcData.input_frames; i++) {
-            m->setPercentDone(m->m_percent_done + 1.0 / (v->get_timestretch_ratio() * v->num_frames));
-        }
+//        for(int i = 0; i < srcData.input_frames; i++) {
+//            m->setPercentDone(m->m_percent_done + 1.0 / (v->get_timestretch_ratio() * v->num_frames));
+//        }
 
-        global_frame += srcData.input_frames;
-    }
-    else {
-        for(uint i = 0; i < nframes; i++) {
-            out[i] = 0;
-        }
-    }
+//        global_frame += srcData.input_frames;
+//    }
+//    else {
+//        for(uint i = 0; i < nframes; i++) {
+//            out[i] = 0;
+//        }
+//    }
 
-    if (note_on == -1 && note_off == -1) {
-        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
-        jack_midi_clear_buffer(output_buf);
-    }
-    if (note_on != -1) {
-        qDebug() << "note on!";
-        note_on = -1;
-        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
-        jack_midi_clear_buffer(output_buf);
-        jack_midi_data_t data[3];
-        data[0] = 0x80;
-        data[1] = 0x4d;
-        data[2] = 0x40;
-        jack_midi_event_write(output_buf, 10, data, 3);
-    }
-    if (note_off != -1) {
-        qDebug() << "note off!";
-        note_off = -1;
-        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
-        jack_midi_clear_buffer(output_buf);
-        jack_midi_data_t data[3];
-        data[0] = 0x80;
-        data[1] = 0x4d;
-        data[2] = 0x40;
-        jack_midi_event_write(output_buf, 10, data, 3);
-    }
+//    if (note_on == -1 && note_off == -1) {
+//        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
+//        jack_midi_clear_buffer(output_buf);
+//    }
+//    if (note_on != -1) {
+//        qDebug() << "note on!";
+//        note_on = -1;
+//        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
+//        jack_midi_clear_buffer(output_buf);
+//        jack_midi_data_t data[3];
+//        data[0] = 0x80;
+//        data[1] = 0x4d;
+//        data[2] = 0x40;
+//        jack_midi_event_write(output_buf, 10, data, 3);
+//    }
+//    if (note_off != -1) {
+//        qDebug() << "note off!";
+//        note_off = -1;
+//        void* output_buf = jack_port_get_buffer(jack_output_midi_port, 1);
+//        jack_midi_clear_buffer(output_buf);
+//        jack_midi_data_t data[3];
+//        data[0] = 0x80;
+//        data[1] = 0x4d;
+//        data[2] = 0x40;
+//        jack_midi_event_write(output_buf, 10, data, 3);
+//    }
 
-    if (m->playing && m->percentDone() > 0.999) {
-        m->setPlaying(false);
-    }
-    else if (m->playing) {
-        std::thread th(do_routine, v);
-        th.detach();
-    }
+//    if (m->playing && m->percentDone() > 0.999) {
+//        m->setPlaying(false);
+//    }
+//    else if (m->playing) {
+//        std::thread th(do_routine, v);
+//        th.detach();
+//    }
 
-    return 0;
-}
+//    return 0;
+//}
 
 void Model::play()
 {

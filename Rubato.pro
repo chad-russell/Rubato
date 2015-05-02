@@ -17,10 +17,10 @@ HEADERS += i_indices.h j_indices.h real_vals.h imag_vals.h \
     frequencyimageprovider.h \
     phasevocoder.h
 
-QMAKE_CXXFLAGS += -std=c++0x -pthread
+QMAKE_CXXFLAGS += -std=c++0x
 CONFIG += c++11
 
-LIBS += -pthread -lfftw3 -lsndfile -ljack -lsamplerate -lmpg123
+LIBS += -L/usr/local/lib -lfftw3 -lsndfile -lsamplerate -lmpg123
 
 QT += multimedia
 
