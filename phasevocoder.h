@@ -1,29 +1,22 @@
 #ifndef PHASEVOCODER_H
 #define PHASEVOCODER_H
 
-#include <vector>
-#include <cmath>
-#include <fstream>
+#include <math.h>
 #include <stdio.h>
 #include </usr/local/include/fftw3.h>
 #include </usr/local/include/sndfile.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
-std::vector<double> locate_peaks(double* magnitudes, int size);
-
-class PhaseVocoder
+struct DoubleArray
 {
-public:
-    explicit PhaseVocoder();
-    ~PhaseVocoder();
-    void open_audio_file(char *path);
-    void close_audio_file();
-    void fft_routine();
-    void write_output(char* output_path);
-    void set_timestretch_ratio(double);
-    double get_timestretch_ratio();
+	int size;
+	double* elements;
+};
+
+struct PhaseVocoder
+{
     int an_idx, syn_idx, tempo_syn_idx, tempo_an_idx;
     int has_written_until;
     float* audio_frames_out;
@@ -35,7 +28,6 @@ public:
     double* audio_frames_reading_from;
     char* file_path;
 
-private:
     /* basic FFT variables */
     int fft_size;
     double* hanning_window;
@@ -60,8 +52,14 @@ private:
     double* syn_phases_idx;
     double* syn_phases_ddx;
     double* phase_increment;
-    std::vector<double> peaks;
-
+    DoubleArray peaks;
 };
+
+void pv_init(PhaseVocoder *pv);
+void pv_cleanup(PhaseVocoder *pv);
+void pv_read_audio_file(PhaseVocoder *pv, char* path);
+void pv_fft_routine(PhaseVocoder* pv);
+void locate_peaks(PhaseVocoder* pv, double* magnitudes, int size);
+void pv_write_output(PhaseVocoder* pv, char* output_path, int hack);
 
 #endif // PHASEVOCODER_H
