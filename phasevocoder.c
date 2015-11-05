@@ -1,5 +1,4 @@
 #include "phasevocoder.h"
-#include </usr/local/include/samplerate.h>
 
 /* calculate hamming window for size */
 double *hanning_matlab(int N)
@@ -85,11 +84,7 @@ void pv_init(PhaseVocoder* pv)
     pv->syn_phases_idx = (double*)malloc(sizeof(double)*pv->fft_size/2);
     pv->syn_phases_ddx = (double*)malloc(sizeof(double)*pv->fft_size/2);
     pv->phase_increment = (double*)malloc(sizeof(double)*pv->fft_size/2);
-
-		DoubleArray _peaks;
-		_peaks.size = 0;
-		_peaks.elements = (double*)malloc(sizeof(double)*pv->fft_size/2);
-		pv->peaks = _peaks;
+		pv->peaks = (double*)malloc(sizeof(double)*pv->fft_size/2);
 
     pv->audio_frames = NULL;
     pv->audio_frames_out = NULL;
@@ -110,7 +105,7 @@ void pv_cleanup(PhaseVocoder* pv)
     free(pv->freq);
     free(pv->forward);
     free(pv->inverse);
-		free(pv->peaks.elements);
+		free(pv->peaks);
 }
 
 void pv_read_audio_file(PhaseVocoder *pv, char* path)
@@ -203,11 +198,26 @@ void pv_fft_routine(PhaseVocoder* pv)
             pv->phase_increment[i] = pv->phases_idx[i] - pv->phases_ddx[i];
         }
 
-        locate_peaks(pv, pv->moduli_idx, pv->fft_size/2);
+				// locate peaks
+				int peaks_size = 0;
+				for(int i = 3; i < pv->fft_size/2-3; i++)
+				{
+					if (pv->moduli_idx[i] > pv->moduli_idx[i-1]
+							&& pv->moduli_idx[i] > pv->moduli_idx[i-2]
+							&& pv->moduli_idx[i] > pv->moduli_idx[i-3]
+							&& pv->moduli_idx[i] > pv->moduli_idx[i+1]
+							&& pv->moduli_idx[i] > pv->moduli_idx[i+2]
+							&& pv->moduli_idx[i] > pv->moduli_idx[i+3])
+					{
+						pv->peaks[peaks_size] = i;
+						peaks_size += 1;
+					}
+				}
+
         int startpoint = 0;
-        for(int i = 0; i < (int)pv->peaks.size-1; i++)
+        for(int i = 0; i < (int)peaks_size-1; i++)
         {
-            int peak = pv->peaks.elements[i];
+            int peak = pv->peaks[i];
 
             if (pv->syn_idx == 1)
             {
@@ -221,7 +231,7 @@ void pv_fft_routine(PhaseVocoder* pv)
 
             double angle_rotation = pv->syn_phases_idx[peak] - pv->phases_idx[peak];
 
-            int next_peak = pv->peaks.elements[i+1];
+            int next_peak = pv->peaks[i+1];
             int endpoint = ((peak+next_peak)/2);
 
             for(int ri_indices = startpoint; ri_indices < endpoint+1; ++ri_indices)
@@ -283,24 +293,4 @@ void pv_write_output(PhaseVocoder* pv, char* output_path, int hack)
 
     sf_writef_float(out_file, pv->audio_frames_out, hack * pv->timestretch_ratio);
     sf_close(out_file);
-}
-
-
-void locate_peaks(PhaseVocoder* pv, double* magnitudes, int size)
-{
-		pv->peaks.size = 0;
-
-    for(int i = 3; i < size-3; i++)
-    {
-        if (magnitudes[i] > magnitudes[i-1]
-                && magnitudes[i] > magnitudes[i-2]
-                && magnitudes[i] > magnitudes[i-3]
-                && magnitudes[i] > magnitudes[i+1]
-                && magnitudes[i] > magnitudes[i+2]
-                && magnitudes[i] > magnitudes[i+3])
-        {
-            pv->peaks.elements[pv->peaks.size] = i;
-						pv->peaks.size += 1;
-        }
-    }
 }

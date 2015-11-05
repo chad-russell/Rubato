@@ -3,19 +3,13 @@
 
 #include <math.h>
 #include <stdio.h>
-#include </usr/local/include/fftw3.h>
-#include </usr/local/include/sndfile.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <fftw3.h>
+#include <samplerate.h>
+#include <sndfile.h>
 
-struct DoubleArray
-{
-	int size;
-	double* elements;
-};
-
-struct PhaseVocoder
+typedef struct PhaseVocoder
 {
     int an_idx, syn_idx, tempo_syn_idx, tempo_an_idx;
     int has_written_until;
@@ -45,21 +39,21 @@ struct PhaseVocoder
     SF_INFO info;
 
     /* array for moduli (magnitudes), and phases */
-    double* moduli_idx;
-    double* phases_idx;
-    double* phases_ddx;
-    double* syn_moduli;
-    double* syn_phases_idx;
-    double* syn_phases_ddx;
-    double* phase_increment;
-    DoubleArray peaks;
-};
+    double *moduli_idx;
+    double *phases_idx;
+    double *phases_ddx;
+    double *syn_moduli;
+    double *syn_phases_idx;
+    double *syn_phases_ddx;
+    double *phase_increment;
+    double *peaks;
+} PhaseVocoder;
 
 void pv_init(PhaseVocoder *pv);
 void pv_cleanup(PhaseVocoder *pv);
-void pv_read_audio_file(PhaseVocoder *pv, char* path);
-void pv_fft_routine(PhaseVocoder* pv);
-void locate_peaks(PhaseVocoder* pv, double* magnitudes, int size);
-void pv_write_output(PhaseVocoder* pv, char* output_path, int hack);
+void pv_read_audio_file(PhaseVocoder *pv, char *path);
+void pv_fft_routine(PhaseVocoder *pv);
+void locate_peaks(PhaseVocoder *pv, double *magnitudes, int size);
+void pv_write_output(PhaseVocoder *pv, char *output_path, int hack);
 
 #endif // PHASEVOCODER_H
