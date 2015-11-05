@@ -14,6 +14,7 @@ module hanning
 		n :: i32;
 		
 		w := [N]f64();
+		w.ptr = cast(*f64) malloc(N * sizeof(f64));
 		memset(cast(*i8) w.ptr, 0, N * sizeof(f64));
 
 		n = N - 1;
