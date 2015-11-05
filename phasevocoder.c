@@ -51,6 +51,40 @@ double *hanning_matlab(int N)
     return w;
 }
 
+float atan2_approx(float y, float x)
+{
+	//http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
+	//Volkan SALMA
+
+	const float ONEQTR_PI = M_PI / 4.0;
+	const float THRQTR_PI = 3.0 * M_PI / 4.0;
+
+	float r, angle;
+	float abs_y = fabs(y) + 1e-10f;      // kludge to prevent 0/0 condition
+
+	if ( x < 0.0f )
+	{
+		r = (x + abs_y) / (abs_y - x);
+		angle = THRQTR_PI;
+	}
+	else
+	{
+		r = (x - abs_y) / (x + abs_y);
+		angle = ONEQTR_PI;
+	}
+
+	angle += (0.1963f * r * r - 0.9817f) * r;
+
+	if (y < 0.0f)
+	{
+		return(-angle);     // negate if in quad III or IV
+	}
+	else
+	{
+		return(angle);
+	}
+}
+
 void pv_init(PhaseVocoder* pv)
 {
     /* set initial variables */
@@ -163,17 +197,16 @@ void pv_fft_routine(PhaseVocoder* pv)
         }
 
         fftw_execute(pv->forward);
-        for(int i = 0; i < pv->fft_size/2; ++i)
+        for(int i = 0; i <= pv->fft_size; ++i)
         {
             pv->freq[i] /= 100.0;
-            pv->freq[pv->fft_size-i] /= 100.0;
         }
 
         for(int i = 0; i < pv->fft_size/2; i++)
         {
             pv->moduli_idx[i] = sqrt(fabs(pv->freq[i]*pv->freq[i] 
 									+ pv->freq[pv->fft_size-i]*pv->freq[pv->fft_size-i])) * 5;
-            pv->phases_idx[i] = atan2(pv->freq[pv->fft_size-i], pv->freq[i]);
+            pv->phases_idx[i] = atan2_approx(pv->freq[pv->fft_size-i], pv->freq[i]);
         }
 
         /* phases for ddx */
@@ -189,7 +222,7 @@ void pv_fft_routine(PhaseVocoder* pv)
         fftw_execute(pv->forward);
         for(int i = 0; i < pv->fft_size/2; i++)
         {
-            pv->phases_ddx[i] = atan2(pv->freq[pv->fft_size-i], pv->freq[i]);
+            pv->phases_ddx[i] = atan2_approx(pv->freq[pv->fft_size-i], pv->freq[i]);
         }
 
         /* phase increment */
