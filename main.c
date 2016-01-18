@@ -6,12 +6,12 @@ int main(int argc, char *argv[])
 		pv_init(&pv);
 
 		printf("opening audio file...\n");
-    pv_read_audio_file(&pv, "/Users/chadrussell/Desktop/input.wav");
+    pv_read_audio_file(&pv, "./input.wav");
 
-    pv.timestretch_ratio = 1.87;
+    pv.timestretch_ratio = 1.8;
 
 		printf("processing...\n");
-    for(int i = 0; i < 10000; i++)
+    for(int i = 0; i < 1000; i++)
     {
 			if (i % 100 == 0)
 			{

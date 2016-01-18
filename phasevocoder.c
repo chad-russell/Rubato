@@ -265,7 +265,7 @@ void pv_write_output(PhaseVocoder* pv, char* output_path, int hack)
     out_info.channels = pv->info.channels;
     out_info.format = pv->info.format;
     out_info.frames = pv->info.frames*pv->timestretch_ratio;
-    out_info.samplerate = pv->info.samplerate/pv->timestretch_ratio/1.15;
+    out_info.samplerate = pv->info.samplerate/2;
     out_info.sections = pv->info.sections;
     out_info.seekable = pv->info.seekable;
     SNDFILE* out_file = sf_open(output_path, SFM_WRITE, &out_info);
