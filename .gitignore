@@ -1,2 +1,4 @@
 pv
 *.o
+*.swp
+.DS_Store
